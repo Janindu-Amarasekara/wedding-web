@@ -1,8 +1,6 @@
 import React from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import HomePage from "./pages/Home";
-import DetailsPage from "./pages/Details";
-import StoryPage from "./pages/Story";
 import RSVPPage from "./pages/RSVP";
 
 function App() {
@@ -14,8 +12,6 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/details" element={<DetailsPage />} />
-          <Route path="/story" element={<StoryPage />} />
           <Route path="/rsvp" element={<RSVPPage />} />
         </Routes>
       </main>
@@ -33,9 +29,7 @@ function Header({ currentPath }) {
           <span className="brand-names">Salma &amp; Janindu</span>
         </div>
         <nav className="nav">
-          <NavLink to="/" label="Welcome" currentPath={currentPath} />
-          <NavLink to="/details" label="Details" currentPath={currentPath} />
-          <NavLink to="/story" label="Our Story" currentPath={currentPath} />
+          <NavLink to="/" label="Home" currentPath={currentPath} />
           <NavLink to="/rsvp" label="RSVP" currentPath={currentPath} />
         </nav>
       </div>

@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wedding Invitation Envelope</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+    * {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        color-adjust: exact;
+    }
+
+    body {
+        margin: 0;
+        padding: 0;
+        background: #0a1630;
+        font-family: 'Montserrat', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        height: 100vh;
+        color: #f9fafb;
+        overflow: hidden;
+    }
+
+    .envelope {
+        width: 720px; /* reduced size */
+        height: 460px;
+        max-width: 95vw;
+        max-height: 90vh;
+        position: relative;
+        overflow: hidden;
+        background: radial-gradient(circle at 20% 0%, #163463 0, #06132c 40%, #020614 100%);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.85);
+        border: 1.5px solid rgba(217, 180, 93, 0.6);
+        border-radius: 18px;
+    }
+
+    /* subtle texture / vignette */
+    .envelope::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.08), transparent 55%),
+          radial-gradient(circle at 80% 100%, rgba(0, 0, 0, 0.6), transparent 60%);
+        mix-blend-mode: soft-light;
+        pointer-events: none;
+    }
+
+    /* stylised floral arcs on left/right */
+    /* .floral {
+        position: absolute;
+        width: 360px;
+        height: 360px;
+        border-radius: 50%;
+        border: 2px solid rgba(248, 247, 244, 0.966);
+        box-shadow: 0 0 14px rgba(254, 254, 254, 0.868);
+        opacity: 0.9;
+    } */
+
+    .floral.left {
+        left: -160px;
+        top: -40px;
+    }
+
+    .floral.right {
+        right: -160px;
+        top: -40px;
+    }
+
+    /* extra small golden squares with dots to mimic florals */
+    .floral-dot {
+        position: absolute;
+        width: 2px;
+        height: 2px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #f4dba0, #c2b186);
+        /* border: 1px solid rgba(244, 244, 242, 0.957); */
+        box-shadow: 0 0 8px rgba(255, 230, 170, 0.7);
+    }
+    
+    .floral-dot::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: radial-gradient(circle, #cabfa3, #8b6914);
+    }
+
+    .floral-dot.ld1 { left: 80px; top: 210px; }
+    .floral-dot.ld2 { left: 120px; top: 250px; }
+    .floral-dot.ld3 { left: 170px; top: 190px; }
+    .floral-dot.ld4 { left: 200px; top: 230px; }
+    .floral-dot.ld5 { left: 60px; top: 260px; }
+    .floral-dot.ld6 { left: 140px; top: 160px; }
+    .floral-dot.ld7 { left: 100px; top: 180px; }
+    .floral-dot.ld8 { left: 180px; top: 220px; }
+
+    .floral-dot.rd1 { right: 80px; top: 210px; }
+    .floral-dot.rd2 { right: 120px; top: 250px; }
+    .floral-dot.rd3 { right: 170px; top: 190px; }
+    .floral-dot.rd4 { right: 200px; top: 230px; }
+    .floral-dot.rd5 { right: 60px; top: 260px; }
+    .floral-dot.rd6 { right: 140px; top: 160px; }
+    .floral-dot.rd7 { right: 100px; top: 180px; }
+    .floral-dot.rd8 { right: 180px; top: 220px; }
+    
+    /* Center dots around names */
+    .floral-dot.c1 { left: 50%; top: 32%; transform: translateX(-50%); }
+    .floral-dot.c2 { left: 45%; top: 36%; }
+    .floral-dot.c3 { right: 45%; top: 36%; }
+    .floral-dot.c4 { left: 50%; top: 48%; transform: translateX(-50%); }
+    .floral-dot.c5 { left: 42%; top: 44%; }
+    .floral-dot.c6 { right: 42%; top: 44%; }
+
+    /* top copy */
+    .title {
+        position: absolute;
+        top: 24%;
+        width: 100%;
+        text-align: center;
+        letter-spacing: 0.35em;
+        color: #f4dba0;
+        font-size: 16px;
+        font-weight: 400;
+        text-transform: uppercase;
+        z-index: 2;
+    }
+
+    .names {
+        position: absolute;
+        top: 32%;
+        width: 100%;
+        text-align: center;
+        color: #f4dba0;
+        font-family: 'Great Vibes', cursive;
+        font-size: 48px;
+        text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+        z-index: 5;
+    }
+
+    /* curving lines in lower half */
+    .curve {
+        position: absolute;
+        top: 53%;
+        width: 100%;
+        height: 120px;
+        border-bottom: 1.5px solid rgba(217, 180, 93, 0.7);
+        border-radius: 50%;
+        opacity: 0.85;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        z-index: 1;
+    }
+
+    .curve-2 {
+        position: absolute;
+        top: 58%;
+        width: 90%;
+        left: 5%;
+        height: 100px;
+        border-bottom: 1px solid rgba(217, 180, 93, 0.5);
+        border-radius: 50%;
+        opacity: 0.7;
+        z-index: 1;
+    }
+
+    .curve-3 {
+        position: absolute;
+        top: 63%;
+        width: 80%;
+        left: 10%;
+        height: 80px;
+        border-bottom: 1px solid rgba(217, 180, 93, 0.4);
+        border-radius: 50%;
+        opacity: 0.6;
+        z-index: 1;
+    }
+
+    /* gold bow */
+    .bow-wrapper {
+        position: absolute;
+        top: 68%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 180px;
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 4;
+    }
+
+    .bow-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        cursor: pointer;
+        gap: 0;
+    }
+
+    .bow-img {
+        width: 180px;
+        height: auto;
+        display: block;
+        background: transparent;
+        filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.7));
+        transition: transform 120ms ease-out, filter 120ms ease-out;
+        pointer-events: none; /* click handled by parent link */
+    }
+
+    .open-here {
+        margin-top: -10px;
+        padding: 8px 20px;
+        font-size: 11px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #1a0f00;
+        font-weight: 600;
+        background: linear-gradient(135deg, #ffd700, #daa520 50%, #b8860b);
+        border: 1.5px solid rgba(255, 215, 0, 0.8);
+        border-radius: 20px;
+        box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.5),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        z-index: 2;
+        transition: transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out;
+        cursor: pointer;
+        display: inline-block;
+    }
+
+    .bow-link:hover .open-here {
+        transform: translateY(-1px);
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.85), rgba(218, 165, 32, 0.85) 50%, rgba(184, 134, 11, 0.85));
+        box-shadow: 
+            0 6px 16px rgba(0, 0, 0, 0.6),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+    }
+
+    .bow-link:hover .bow-img {
+        transform: translateY(-1px);
+        filter: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.9));
+    }
+
+    /* Invitee bottom text */
+    .invitee {
+        position: absolute;
+        bottom: 10px;
+        right: 20px;
+        font-size: 14px;
+        color: #f4dba0;
+        letter-spacing: 0.06em;
+        text-transform: none;
+        text-align: right;
+        z-index: 2;
+    }
+
+    /* PDF/Print optimizations */
+    @media print {
+        body {
+            background: #0a1630;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .envelope {
+            max-width: 100%;
+            max-height: 100vh;
+            box-shadow: none;
+        }
+    }
+
+    /* Mobile/PDF viewing optimizations */
+    @media (max-width: 768px) {
+        .envelope {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            border-radius: 0;
+        }
+        
+        .floral-dot {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .floral-dot::before {
+            width: 3px;
+            height: 3px;
+        }
+    }
+</style>
+
+</head>
+<body>
+
+<div class="envelope">
+    <!-- Stylised side florals -->
+    <div class="floral left"></div>
+    <div class="floral right"></div>
+
+    <!-- A few glowing dots to suggest detail -->
+    <div class="floral-dot ld1"></div>
+    <div class="floral-dot ld2"></div>
+    <div class="floral-dot ld3"></div>
+    <div class="floral-dot ld4"></div>
+    <div class="floral-dot ld5"></div>
+    <div class="floral-dot ld6"></div>
+    <div class="floral-dot ld7"></div>
+    <div class="floral-dot ld8"></div>
+
+    <div class="floral-dot rd1"></div>
+    <div class="floral-dot rd2"></div>
+    <div class="floral-dot rd3"></div>
+    <div class="floral-dot rd4"></div>
+    <div class="floral-dot rd5"></div>
+    <div class="floral-dot rd6"></div>
+    <div class="floral-dot rd7"></div>
+    <div class="floral-dot rd8"></div>
+    
+    <!-- Center dots around names -->
+    <div class="floral-dot c1"></div>
+    <div class="floral-dot c2"></div>
+    <div class="floral-dot c3"></div>
+    <div class="floral-dot c4"></div>
+    <div class="floral-dot c5"></div>
+    <div class="floral-dot c6"></div>
+
+    <!-- Text -->
+    <div class="title">THE WEDDING OF</div>
+    <div class="names">Salma &amp; Lavindu</div>
+
+    <!-- Curving lines -->
+    <div class="curve"></div>
+    <div class="curve-2"></div>
+    <div class="curve-3"></div>
+
+    <!-- Bow + open link -->
+    <div class="bow-wrapper">
+        <a href="https://your-link.com" class="bow-link">
+            <img src="bow2.png" alt="Open invitation" class="bow-img" />
+            <div class="open-here">OPEN HERE</div>
+        </a>
+    </div>
+
+    <!-- Invitee -->
+    <div class="invitee">To :- Mr &amp; Mrs Anuruddha Senanayaka</div>
+</div>
+
+</body>
+</html>
