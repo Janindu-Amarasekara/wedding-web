@@ -5,7 +5,9 @@ import {
   WEDDING_TIME,
   WEDDING_END_TIME,
   WEDDING_VENUE,
-  MAPS_URL
+  MAPS_URL,
+  BRIDE_PARENTS,
+  GROOM_PARENTS
 } from "../shared";
 
 function formatTitleAndName(rawTitle, rawName) {
@@ -59,7 +61,7 @@ function HeroSection({ guestLabel }) {
               Dear <span className="hero-guest-name">{guestLabel}</span>,
             </p>
           )}
-          <p className="hero-tagline">You&apos;re invited to celebrate</p>
+          <p className="hero-tagline">You&apos;re invited to celebrate the wedding of</p>
           <h1 className="hero-names">Salma &amp; Janindu</h1>
           <p className="hero-date">{WEDDING_DATE}</p>
           <p className="hero-location">{WEDDING_VENUE}</p>
@@ -85,25 +87,70 @@ function DetailsSection() {
           friends. Here are the key details for our wedding celebration.
         </p>
 
-        <div className="details-grid">
-          <div className="detail-card">
-            <h3>Ceremony</h3>
-            <p className="detail-main">{WEDDING_DATE}</p>
-            <p className="detail-sub">
-              {WEDDING_TIME} – {WEDDING_END_TIME}
-            </p>
+        <div className="details-container">
+          <div className="detail-item">
+            <div className="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div className="detail-content">
+              <h3>Date & Time</h3>
+              <p className="detail-main">{WEDDING_DATE}</p>
+              <p className="detail-sub">
+                {WEDDING_TIME} – {WEDDING_END_TIME}
+              </p>
+            </div>
           </div>
 
-          <div className="detail-card">
-            <h3>Location</h3>
-            <p className="detail-main">{WEDDING_VENUE}</p>
-            <button
-              className="btn secondary full"
-              type="button"
-              onClick={() => window.open(MAPS_URL, "_blank")}
-            >
-              Open in Google Maps
-            </button>
+          <div className="detail-item">
+            <div className="detail-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                <circle cx="12" cy="10" r="3"></circle>
+              </svg>
+            </div>
+            <div className="detail-content">
+              <h3>Venue</h3>
+              <p className="detail-main">{WEDDING_VENUE}</p>
+              <button
+                className="btn secondary"
+                type="button"
+                onClick={() => window.open(MAPS_URL, "_blank")}
+              >
+                View on Map
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="parents-section">
+          <div className="parent-info">
+            <div className="parent-icon-bride">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <p className="parent-label">Daughter of</p>
+            <p className="parent-names">
+              {BRIDE_PARENTS.father} &amp; {BRIDE_PARENTS.mother}
+            </p>
+            <p className="parent-bride-name">{BRIDE_PARENTS.brideName}</p>
+          </div>
+          <div className="parent-info">
+            <div className="parent-icon-groom">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <p className="parent-label">Son of</p>
+            <p className="parent-names">
+              {GROOM_PARENTS.father} &amp; {GROOM_PARENTS.mother}
+            </p>
+            <p className="parent-groom-name">{GROOM_PARENTS.groomName}</p>
           </div>
         </div>
       </div>
