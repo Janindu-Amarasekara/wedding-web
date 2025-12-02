@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { supabase } from "../lib/supabase";
 
 function RSVPPage() {
   return (
@@ -6,7 +7,12 @@ function RSVPPage() {
       <div className="section-inner">
         <div className="rsvp-header">
           <div className="rsvp-icon-wrapper">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
               <path d="M13 8H7"></path>
               <path d="M17 12H7"></path>
@@ -30,7 +36,8 @@ function RSVPForm() {
     lastName: "",
     attending: "yes",
     guests: "1",
-    message: ""
+    message: "",
+    honeypot: "", // Honeypot field - should remain empty
   });
 
   const [status, setStatus] = useState({ type: "", message: "" });
@@ -41,34 +48,97 @@ function RSVPForm() {
     setStatus({ type: "", message: "" });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.firstName.trim()) {
       setStatus({ type: "error", message: "Please enter your first name." });
       return;
-    }
-    if (!form.lastName.trim()) {
-      setStatus({ type: "error", message: "Please enter your last name." });
+    } else if (form.firstName.trim().length < 3) {
+      setStatus({
+        type: "error",
+        message: "First name must be at least 3 characters long.",
+      });
       return;
     }
 
-    console.log("RSVP submitted", form);
+    if (!form.lastName.trim()) {
+      setStatus({ type: "error", message: "Please enter your last name." });
+      return;
+    } else if (form.lastName.trim().length < 3) {
+      setStatus({
+        type: "error",
+        message: "Last name must be at least 3 characters long.",
+      });
+      return;
+    }
 
-    setStatus({
-      type: "success",
-      message:
-        "Thank you for your response! We have received your RSVP and will be in touch with more details soon."
-    });
+    // Honeypot check - if filled, it's likely a bot
+    if (form.honeypot.trim() !== "") {
+      // Silently fail - don't let bots know they were caught
+      setStatus({
+        type: "success",
+        message:
+          "Thank you for your response! We have received your RSVP and will be in touch with more details soon.",
+      });
+      setForm((prev) => ({
+        ...prev,
+        firstName: "",
+        lastName: "",
+        attending: "yes",
+        guests: "1",
+        message: "",
+        honeypot: "",
+      }));
+      return;
+    }
 
-    setForm((prev) => ({
-      ...prev,
-      firstName: "",
-      lastName: "",
-      attending: "yes",
-      guests: "1",
-      message: ""
-    }));
+    // Submit to Supabase
+    setStatus({ type: "", message: "" });
+    
+    try {
+      const { data, error } = await supabase
+        .from('rsvps')
+        .insert({
+          first_name: form.firstName.trim(),
+          last_name: form.lastName.trim(),
+          attending: form.attending === "yes",
+          guests: parseInt(form.guests, 10),
+          message: form.message.trim() || null
+        });
+
+      if (error) {
+        console.error('Error submitting RSVP:', error);
+        setStatus({
+          type: "error",
+          message: "Sorry, there was an error submitting your RSVP. Please try again later.",
+        });
+        return;
+      }
+
+      console.log("RSVP submitted successfully:", data);
+
+      setStatus({
+        type: "success",
+        message:
+          "Thank you for your response! We have received your RSVP and will be in touch with more details soon.",
+      });
+
+      setForm((prev) => ({
+        ...prev,
+        firstName: "",
+        lastName: "",
+        attending: "yes",
+        guests: "1",
+        message: "",
+      }));
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setStatus({
+        type: "error",
+        message: "Sorry, there was an error submitting your RSVP. Please try again later.",
+      });
+    }
   };
 
   return (
@@ -76,7 +146,12 @@ function RSVPForm() {
       <div className="form-section">
         <div className="form-section-header">
           <div className="form-section-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -86,7 +161,12 @@ function RSVPForm() {
         <div className="form-row">
           <div className="form-field">
             <label htmlFor="firstName">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
@@ -104,7 +184,12 @@ function RSVPForm() {
           </div>
           <div className="form-field">
             <label htmlFor="lastName">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
@@ -126,7 +211,12 @@ function RSVPForm() {
       <div className="form-section">
         <div className="form-section-header">
           <div className="form-section-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -145,7 +235,11 @@ function RSVPForm() {
           <div className="form-field">
             <label htmlFor="attending">Will you be attending?</label>
             <div className="attending-options">
-              <label className={`attending-option ${form.attending === "yes" ? "active" : ""}`}>
+              <label
+                className={`attending-option ${
+                  form.attending === "yes" ? "active" : ""
+                }`}
+              >
                 <input
                   type="radio"
                   name="attending"
@@ -154,13 +248,22 @@ function RSVPForm() {
                   onChange={handleChange}
                 />
                 <div className="option-content">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                   <span>Yes, I&apos;ll be there</span>
                 </div>
               </label>
-              <label className={`attending-option ${form.attending === "no" ? "active" : ""}`}>
+              <label
+                className={`attending-option ${
+                  form.attending === "no" ? "active" : ""
+                }`}
+              >
                 <input
                   type="radio"
                   name="attending"
@@ -169,7 +272,12 @@ function RSVPForm() {
                   onChange={handleChange}
                 />
                 <div className="option-content">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
                   </svg>
@@ -180,7 +288,12 @@ function RSVPForm() {
           </div>
           <div className="form-field">
             <label htmlFor="guests">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -208,38 +321,79 @@ function RSVPForm() {
       <div className="form-section">
         <div className="form-section-header">
           <div className="form-section-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
               <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
             </svg>
           </div>
           <h3>Special Message</h3>
         </div>
-        <div className="form-field">
-          <label htmlFor="message">
-            Message to the couple (optional)
-          </label>
-          <textarea
-            id="message"
-            name="message"
-            rows={4}
-            value={form.message}
-            onChange={handleChange}
-            placeholder="Share a note, prayer, dietary needs, or any special requests..."
-          />
+          <div className="form-field">
+            <label htmlFor="message">Message to the couple (optional)</label>
+            <textarea
+              id="message"
+              name="message"
+              rows={4}
+              value={form.message}
+              onChange={handleChange}
+              placeholder="Share a note, prayer, dietary needs, or any special requests..."
+            />
+          </div>
+          
+          {/* Honeypot field - hidden from users but visible to bots */}
+          <div className="form-field honeypot-field">
+            <label htmlFor="website" style={{ display: "none" }}>
+              Website (leave blank)
+            </label>
+            <input
+              type="text"
+              id="website"
+              name="honeypot"
+              value={form.honeypot}
+              onChange={handleChange}
+              tabIndex="-1"
+              autoComplete="off"
+              style={{
+                position: "absolute",
+                left: "-9999px",
+                width: "1px",
+                height: "1px",
+                opacity: 0,
+                pointerEvents: "none"
+              }}
+            />
+          </div>
         </div>
-      </div>
 
       {status.message && (
-        <div className={`form-status-card ${status.type === "error" ? "error" : "success"}`}>
+        <div
+          className={`form-status-card ${
+            status.type === "error" ? "error" : "success"
+          }`}
+        >
           <div className="status-icon">
             {status.type === "error" ? (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
                 <line x1="12" y1="16" x2="12.01" y2="16"></line>
               </svg>
             ) : (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
@@ -251,8 +405,13 @@ function RSVPForm() {
 
       <div className="form-submit-wrapper">
         <button className="btn primary rsvp-submit-btn" type="submit">
-          <span>Send RSVP</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <span>Confirm</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <line x1="22" y1="2" x2="11" y2="13"></line>
             <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
           </svg>
@@ -263,5 +422,3 @@ function RSVPForm() {
 }
 
 export default RSVPPage;
-
-

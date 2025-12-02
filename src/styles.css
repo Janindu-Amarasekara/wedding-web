@@ -821,6 +821,14 @@ main {
   text-align: center;
 }
 
+.honeypot-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
 .rsvp-submit-btn {
   min-width: 200px;
   padding: 1rem 2.5rem;
