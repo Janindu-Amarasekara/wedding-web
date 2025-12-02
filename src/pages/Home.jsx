@@ -10,6 +10,173 @@ import {
   GROOM_PARENTS
 } from "../shared";
 
+// Function to generate calendar event with mobile support
+function generateCalendarEvent() {
+  // Parse the date: "Friday, January 16, 2026"
+  // Split by comma: ["Friday", "January 16", "2026"]
+  const parts = WEDDING_DATE.split(", ");
+  const monthDay = parts[1]; // "January 16"
+  const year = parts[2]; // "2026"
+  
+  // Split month and day: "January 16" -> ["January", "16"]
+  const monthDayParts = monthDay.split(" ");
+  const month = monthDayParts[0]; // "January"
+  const day = monthDayParts[1]; // "16"
+  
+  // Convert month name to number
+  const monthNames = {
+    January: "01", February: "02", March: "03", April: "04",
+    May: "05", June: "06", July: "07", August: "08",
+    September: "09", October: "10", November: "11", December: "12"
+  };
+  
+  // Parse time: "6:30 PM" -> 18:30
+  function parseTime(timeStr) {
+    const [time, period] = timeStr.split(" ");
+    const [hours, minutes] = time.split(":");
+    let hour24 = parseInt(hours);
+    if (period === "PM" && hour24 !== 12) hour24 += 12;
+    if (period === "AM" && hour24 === 12) hour24 = 0;
+    return `${hour24.toString().padStart(2, "0")}${minutes.padStart(2, "0")}`;
+  }
+  
+  const startTime = parseTime(WEDDING_TIME);
+  const endTime = parseTime(WEDDING_END_TIME);
+  
+  // Format dates for different calendar systems
+  const dayPadded = day.padStart(2, "0");
+  const monthNum = monthNames[month];
+  
+  // Verify we have valid values
+  if (!monthNum || !dayPadded || !year) {
+    console.error("Error parsing date:", { month, day, year, WEDDING_DATE });
+    alert("Error: Could not parse wedding date. Please contact us.");
+    return;
+  }
+  
+  // For ICS format - use local time without timezone (floating time)
+  const startDateTime = `${year}${monthNum}${dayPadded}T${startTime}00`;
+  const endDateTime = `${year}${monthNum}${dayPadded}T${endTime}00`;
+  
+  // For Google Calendar - format: YYYYMMDDTHHMMSS/YYYYMMDDTHHMMSS
+  const googleStartDateTime = `${year}${monthNum}${dayPadded}T${startTime}00`;
+  const googleEndDateTime = `${year}${monthNum}${dayPadded}T${endTime}00`;
+  
+  // Debug output
+  console.log("Parsed wedding date:", {
+    original: WEDDING_DATE,
+    year,
+    month,
+    day,
+    monthNum,
+    dayPadded,
+    startTime,
+    endTime,
+    startDateTime,
+    endDateTime
+  });
+  
+  // Detect device type
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+  const isAndroid = /Android/.test(navigator.userAgent);
+  const isMobile = isIOS || isAndroid;
+  
+  // Create ICS file content
+  const now = new Date();
+  const nowStr = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Wedding Invitation//EN",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${now.getTime()}@wedding-invitation`,
+    `DTSTAMP:${nowStr}`,
+    `DTSTART:${startDateTime}`,
+    `DTEND:${endDateTime}`,
+    `SUMMARY:Wedding of Salma & Janindu`,
+    `DESCRIPTION:You're invited to celebrate the wedding of Salma & Janindu\\n\\nVenue: ${WEDDING_VENUE}`,
+    `LOCATION:${WEDDING_VENUE}`,
+    "BEGIN:VALARM",
+    "TRIGGER:-P1D",
+    "ACTION:DISPLAY",
+    "DESCRIPTION:Reminder: Wedding tomorrow!",
+    "END:VALARM",
+    "BEGIN:VALARM",
+    "TRIGGER:-PT1440M",
+    "ACTION:EMAIL",
+    "DESCRIPTION:Reminder: Wedding in 1 day",
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+  
+  // Helper function to create Google Calendar URL
+  function createGoogleCalendarUrl() {
+    const datesParam = `${googleStartDateTime}/${googleEndDateTime}`;
+    const textParam = encodeURIComponent("Wedding of Salma & Janindu");
+    // Include reminder info in details since Google Calendar URL doesn't reliably support custom reminders
+    const detailsParam = encodeURIComponent(`You're invited to celebrate the wedding of Salma & Janindu\n\nVenue: ${WEDDING_VENUE}\n\nNote: Please set a reminder for 1 day before the event.`);
+    const locationParam = encodeURIComponent(WEDDING_VENUE);
+    // Note: Google Calendar URL 'remind' parameter is unreliable, so we rely on ICS file reminders
+    // For Chrome/iOS, users can manually set the reminder or use the ICS file download option
+    return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${textParam}&dates=${datesParam}&details=${detailsParam}&location=${locationParam}`;
+  }
+  
+  // For iOS - Apple Calendar for Safari, Google Calendar for Chrome
+  if (isIOS) {
+    // Detect if it's Chrome on iOS
+    const isChrome = /CriOS|FxiOS|EdgiOS/.test(navigator.userAgent);
+    
+    if (isChrome) {
+      // Chrome on iOS - use Google Calendar link (Chrome doesn't handle ICS downloads well)
+      const googleCalendarUrl = createGoogleCalendarUrl();
+      window.open(googleCalendarUrl, "_blank");
+      return;
+    } else {
+      // Safari on iOS - download ICS file (opens in Apple Calendar)
+      const blob = new Blob([icsContent], { 
+        type: "text/calendar;charset=utf-8"
+      });
+      
+      // Create object URL and trigger download
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "wedding.ics");
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up after a delay
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 100);
+      return;
+    }
+  }
+  
+  // For Android - use Google Calendar link
+  if (isAndroid) {
+    const googleCalendarUrl = createGoogleCalendarUrl();
+    window.open(googleCalendarUrl, "_blank");
+    return;
+  }
+  
+  // For desktop - download ICS file
+  const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "wedding-invitation.ics";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
 function formatTitleAndName(rawTitle, rawName) {
   const title = (rawTitle || "").trim();
   const name = (rawName || "").trim();
@@ -62,7 +229,11 @@ function HeroSection({ guestLabel }) {
             </p>
           )}
           <p className="hero-tagline">You&apos;re invited to celebrate the wedding of</p>
-          <h1 className="hero-names">Salma &amp; Janindu</h1>
+          <h1 className="hero-names">
+            <span className="hero-name">Salma</span>
+            <span className="hero-ampersand">&amp;</span>
+            <span className="hero-name">Janindu</span>
+          </h1>
           <p className="hero-date">{WEDDING_DATE}</p>
           <p className="hero-location">{WEDDING_VENUE}</p>
 
@@ -101,6 +272,19 @@ function DetailsSection() {
               <p className="detail-sub">
                 {WEDDING_TIME} – {WEDDING_END_TIME}
               </p>
+              <button
+                className="btn secondary calendar-btn"
+                type="button"
+                onClick={generateCalendarEvent}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Add to Calendar</span>
+              </button>
             </div>
           </div>
 

@@ -52,6 +52,6 @@ function DetailsPage() {
   );
 }
 
-export default DetailsPage;
+// export default DetailsPage;
 
 

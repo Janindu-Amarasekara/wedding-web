@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import HomePage from "./pages/Home";
 import RSVPPage from "./pages/RSVP";
 
@@ -21,10 +21,11 @@ function App() {
 }
 
 function Header({ currentPath }) {
+  const navigate = useNavigate();
   return (
     <header className="header">
       <div className="header-inner">
-        <div className="header-brand">
+        <div onClick={() => navigate("/")} className="header-brand">
           <span className="brand-small">The Wedding of</span>
           <span className="brand-names">Salma &amp; Janindu</span>
         </div>
