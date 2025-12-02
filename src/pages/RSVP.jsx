@@ -26,8 +26,8 @@ function RSVPPage() {
 
 function RSVPForm() {
   const [form, setForm] = useState({
-    name: "",
-    contact: "",
+    firstName: "",
+    lastName: "",
     attending: "yes",
     guests: "1",
     message: ""
@@ -44,12 +44,12 @@ function RSVPForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!form.name.trim()) {
-      setStatus({ type: "error", message: "Please enter your full name." });
+    if (!form.firstName.trim()) {
+      setStatus({ type: "error", message: "Please enter your first name." });
       return;
     }
-    if (!form.contact.trim()) {
-      setStatus({ type: "error", message: "Please enter your contact number." });
+    if (!form.lastName.trim()) {
+      setStatus({ type: "error", message: "Please enter your last name." });
       return;
     }
 
@@ -63,6 +63,8 @@ function RSVPForm() {
 
     setForm((prev) => ({
       ...prev,
+      firstName: "",
+      lastName: "",
       attending: "yes",
       guests: "1",
       message: ""
@@ -83,37 +85,38 @@ function RSVPForm() {
         </div>
         <div className="form-row">
           <div className="form-field">
-            <label htmlFor="name">
+            <label htmlFor="firstName">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              Full Name
+              First Name
             </label>
             <input
-              id="name"
-              name="name"
+              id="firstName"
+              name="firstName"
               type="text"
-              value={form.name}
+              value={form.firstName}
               onChange={handleChange}
-              placeholder="Your full name"
+              placeholder="First name"
               required
             />
           </div>
           <div className="form-field">
-            <label htmlFor="contact">
+            <label htmlFor="lastName">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
               </svg>
-              Contact Number
+              Last Name
             </label>
             <input
-              id="contact"
-              name="contact"
-              type="tel"
-              value={form.contact}
+              id="lastName"
+              name="lastName"
+              type="text"
+              value={form.lastName}
               onChange={handleChange}
-              placeholder="+94 77 123 4567"
+              placeholder="Last name"
               required
             />
           </div>

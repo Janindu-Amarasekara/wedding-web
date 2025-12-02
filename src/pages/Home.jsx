@@ -239,7 +239,7 @@ function HeroSection({ guestLabel }) {
 
           <div className="hero-actions">
             <Link to="/rsvp" className="btn primary">
-              RSVP
+              Confirm Attendance
             </Link>
           </div>
         </div>
