@@ -44,7 +44,17 @@ function RSVPForm() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      const updated = { ...prev, [name]: value };
+      // If attending is "no", set guests to 0
+      if (name === "attending" && value === "no") {
+        updated.guests = "0";
+      } else if (name === "attending" && value === "yes" && prev.guests === "0") {
+        // If switching back to yes and guests was 0, set to 1
+        updated.guests = "1";
+      }
+      return updated;
+    });
     setStatus({ type: "", message: "" });
   };
 
@@ -103,7 +113,7 @@ function RSVPForm() {
           first_name: form.firstName.trim(),
           last_name: form.lastName.trim(),
           attending: form.attending === "yes",
-          guests: parseInt(form.guests, 10),
+          guests: form.attending === "yes" ? parseInt(form.guests, 10) : 0,
           message: form.message.trim() || null
         });
 
@@ -286,35 +296,37 @@ function RSVPForm() {
               </label>
             </div>
           </div>
-          <div className="form-field">
-            <label htmlFor="guests">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
+          {form.attending === "yes" && (
+            <div className="form-field">
+              <label htmlFor="guests">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                Number of Guests
+              </label>
+              <select
+                id="guests"
+                name="guests"
+                value={form.guests}
+                onChange={handleChange}
               >
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-              </svg>
-              Number of Guests
-            </label>
-            <select
-              id="guests"
-              name="guests"
-              value={form.guests}
-              onChange={handleChange}
-            >
-              <option value="1">1 Guest</option>
-              <option value="2">2 Guests</option>
-              <option value="3">3 Guests</option>
-              <option value="4">4 Guests</option>
-              <option value="5">5 Guests</option>
-              <option value="6">6 Guests</option>
-            </select>
-          </div>
+                <option value="1">1 Guest</option>
+                <option value="2">2 Guests</option>
+                <option value="3">3 Guests</option>
+                <option value="4">4 Guests</option>
+                <option value="5">5 Guests</option>
+                <option value="6">6 Guests</option>
+              </select>
+            </div>
+          )}
         </div>
       </div>
 
