@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
+import { useGuest } from "../context/GuestContext";
 
 function RSVPPage() {
   return (
@@ -31,6 +32,7 @@ function RSVPPage() {
 }
 
 function RSVPForm() {
+  const { guestInfo } = useGuest();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -41,6 +43,17 @@ function RSVPForm() {
   });
 
   const [status, setStatus] = useState({ type: "", message: "" });
+
+  // Auto-fill from context on mount
+  useEffect(() => {
+    if (guestInfo.firstName || guestInfo.lastName) {
+      setForm((prev) => ({
+        ...prev,
+        firstName: guestInfo.firstName || prev.firstName,
+        lastName: guestInfo.lastName || prev.lastName,
+      }));
+    }
+  }, [guestInfo.firstName, guestInfo.lastName]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

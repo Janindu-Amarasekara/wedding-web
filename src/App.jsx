@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
+import { GuestProvider } from "./context/GuestContext";
 import HomePage from "./pages/Home";
 import RSVPPage from "./pages/RSVP";
 
@@ -7,16 +8,18 @@ function App() {
   const location = useLocation();
 
   return (
-    <div className="page">
-      <Header currentPath={location.pathname} />
-      <main>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/rsvp" element={<RSVPPage />} />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
+    <GuestProvider>
+      <div className="page">
+        <Header currentPath={location.pathname} />
+        <main>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/rsvp" element={<RSVPPage />} />
+          </Routes>
+        </main>
+        <Footer />
+      </div>
+    </GuestProvider>
   );
 }
 

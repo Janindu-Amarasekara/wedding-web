@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useGuest } from "../context/GuestContext";
 import {
   WEDDING_DATE,
   WEDDING_TIME,
@@ -204,11 +205,73 @@ function formatTitleAndName(rawTitle, rawName) {
 
 function HomePage() {
   const [searchParams] = useSearchParams();
+  const { guestInfo, updateGuestInfo } = useGuest();
 
   const title = searchParams.get("title") || "";
-  const name = searchParams.get("name") || "";
+  const firstName = searchParams.get("firstname") || "";
+  const lastName = searchParams.get("lastname") || "";
 
-  const guestLabel = formatTitleAndName(title, name);
+  // Update context when URL params change
+  // If URL params are empty, keep previous context values
+  // If only firstname is provided, clear lastname
+  useEffect(() => {
+    // If URL has params, use them (even if empty strings, they override)
+    // If URL params are missing, keep existing context values
+    const urlHasTitle = searchParams.has("title");
+    const urlHasFirstName = searchParams.has("firstname");
+    const urlHasLastName = searchParams.has("lastname");
+
+    // Build the values to use: URL params if present, otherwise keep context
+    const newTitle = urlHasTitle ? title : (guestInfo.title || "");
+    
+    // Handle firstname: use from URL if present, clear if only lastname is provided, otherwise keep previous
+    let newFirstName = "";
+    if (urlHasFirstName) {
+      newFirstName = firstName;
+    } else if (urlHasLastName) {
+      // If lastname is provided but firstname param is missing, clear firstname
+      newFirstName = "";
+    } else {
+      // If neither firstname nor lastname params exist, keep previous firstname
+      newFirstName = guestInfo.firstName || "";
+    }
+    
+    // Handle lastname: use from URL if present, clear if only firstname is provided, otherwise keep previous
+    let newLastName = "";
+    if (urlHasLastName) {
+      newLastName = lastName;
+    } else if (urlHasFirstName) {
+      // If firstname is provided but lastname param is missing, clear lastname
+      newLastName = "";
+    } else {
+      // If neither firstname nor lastname params exist, keep previous lastname
+      newLastName = guestInfo.lastName || "";
+    }
+
+    // Only update if there are actual changes or if we have URL params
+    if (urlHasTitle || urlHasFirstName || urlHasLastName) {
+      // Check if values actually changed
+      if (
+        newTitle !== guestInfo.title ||
+        newFirstName !== guestInfo.firstName ||
+        newLastName !== guestInfo.lastName
+      ) {
+        updateGuestInfo(newTitle, newFirstName, newLastName);
+      }
+    }
+  }, [title, firstName, lastName, searchParams, updateGuestInfo, guestInfo]);
+
+  // Use context values (which may come from URL or be preserved)
+  const displayFirstName = guestInfo.firstName || "";
+  const displayLastName = guestInfo.lastName || "";
+  const fullName = displayLastName 
+    ? `${displayFirstName} ${displayLastName}`.trim()
+    : displayFirstName;
+  
+  const guestLabel = formatTitleAndName(
+    guestInfo.title || "",
+    fullName
+  );
 
   return (
     <>
