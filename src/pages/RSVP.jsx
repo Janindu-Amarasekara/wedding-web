@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 
 function RSVPPage() {
@@ -31,6 +32,7 @@ function RSVPPage() {
 }
 
 function RSVPForm() {
+  const [searchParams] = useSearchParams();
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -41,6 +43,21 @@ function RSVPForm() {
   });
 
   const [status, setStatus] = useState({ type: "", message: "" });
+
+  // Auto-fill form from URL parameters on mount
+  useEffect(() => {
+    const title = searchParams.get("title");
+    const firstname = searchParams.get("firstname");
+    const lastname = searchParams.get("lastname");
+
+    if (firstname || lastname) {
+      setForm((prev) => ({
+        ...prev,
+        firstName: firstname || prev.firstName,
+        lastName: lastname || prev.lastName,
+      }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

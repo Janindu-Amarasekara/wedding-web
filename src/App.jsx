@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
+import { Routes, Route, Link, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import HomePage from "./pages/Home";
 import RSVPPage from "./pages/RSVP";
 
@@ -22,27 +22,37 @@ function App() {
 
 function Header({ currentPath }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  const handleLogoClick = () => {
+    const queryString = searchParams.toString();
+    navigate(`/${queryString ? `?${queryString}` : ''}`);
+  };
+  
   return (
     <header className="header">
       <div className="header-inner">
-        <div onClick={() => navigate("/")} className="header-brand">
+        <div onClick={handleLogoClick} className="header-brand">
           <span className="brand-small">The Wedding of</span>
           <span className="brand-names">Salma &amp; Janindu</span>
         </div>
         <nav className="nav">
-          <NavLink to="/" label="Home" currentPath={currentPath} />
-          <NavLink to="/rsvp" label="RSVP" currentPath={currentPath} />
+          <NavLink to="/" label="Home" currentPath={currentPath} searchParams={searchParams} />
+          <NavLink to="/rsvp" label="RSVP" currentPath={currentPath} searchParams={searchParams} />
         </nav>
       </div>
     </header>
   );
 }
 
-function NavLink({ to, label, currentPath }) {
+function NavLink({ to, label, currentPath, searchParams }) {
   const isActive = currentPath === to;
+  const queryString = searchParams.toString();
+  const toWithParams = `${to}${queryString ? `?${queryString}` : ''}`;
+  
   return (
     <Link
-      to={to}
+      to={toWithParams}
       className={isActive ? "nav-link nav-link-active" : "nav-link"}
     >
       {label}

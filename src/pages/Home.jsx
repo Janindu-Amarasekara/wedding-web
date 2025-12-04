@@ -206,19 +206,23 @@ function HomePage() {
   const [searchParams] = useSearchParams();
 
   const title = searchParams.get("title") || "";
-  const name = searchParams.get("name") || "";
+  const firstname = searchParams.get("firstname") || "";
+  const lastname = searchParams.get("lastname") || "";
+  
+  // Combine firstname and lastname into full name
+  const fullName = [firstname, lastname].filter(Boolean).join(" ");
 
-  const guestLabel = formatTitleAndName(title, name);
+  const guestLabel = formatTitleAndName(title, fullName);
 
   return (
     <>
-      <HeroSection guestLabel={guestLabel} />
+      <HeroSection guestLabel={guestLabel} searchParams={searchParams} />
       <DetailsSection />
     </>
   );
 }
 
-function HeroSection({ guestLabel }) {
+function HeroSection({ guestLabel, searchParams }) {
   return (
     <section id="welcome" className="hero">
       <div className="hero-overlay">
@@ -238,7 +242,10 @@ function HeroSection({ guestLabel }) {
           <p className="hero-location">{WEDDING_VENUE}</p>
 
           <div className="hero-actions">
-            <Link to="/rsvp" className="btn primary">
+            <Link 
+              to={`/rsvp${searchParams.toString() ? `?${searchParams.toString()}` : ''}`} 
+              className="btn primary"
+            >
               Confirm Attendance
             </Link>
           </div>
