@@ -2,20 +2,23 @@ import React from "react";
 import { Routes, Route, Link, useLocation, useNavigate } from "react-router-dom";
 import HomePage from "./pages/Home";
 import RSVPPage from "./pages/RSVP";
+import EnvelopePage from "./pages/Envelope";
 
 function App() {
   const location = useLocation();
+  const isEnvelopePage = location.pathname === "/envelope";
 
   return (
     <div className="page">
-      <Header currentPath={location.pathname} />
+      {!isEnvelopePage && <Header currentPath={location.pathname} />}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/rsvp" element={<RSVPPage />} />
+          <Route path="/envelope" element={<EnvelopePage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isEnvelopePage && <Footer />}
     </div>
   );
 }
