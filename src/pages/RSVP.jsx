@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { supabase } from "../lib/supabase";
 
 function RSVPPage() {
@@ -31,6 +31,7 @@ function RSVPPage() {
 }
 
 function RSVPForm() {
+  const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
@@ -41,6 +42,59 @@ function RSVPForm() {
   });
 
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+
+  // Load reCAPTCHA v3 script
+  useEffect(() => {
+    if (!recaptchaSiteKey) {
+      console.warn("reCAPTCHA Site Key not found. Set VITE_RECAPTCHA_SITE_KEY in your .env file");
+      setRecaptchaLoaded(true); // No key, skip loading
+      return;
+    }
+
+    console.log("Loading reCAPTCHA v3 with site key:", recaptchaSiteKey.substring(0, 10) + "...");
+
+    // Check if script is already loaded
+    if (window.grecaptcha) {
+      console.log("reCAPTCHA already loaded");
+      setRecaptchaLoaded(true);
+      return;
+    }
+
+    // Load the script dynamically
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      console.log("reCAPTCHA script loaded");
+      if (window.grecaptcha) {
+        window.grecaptcha.ready(() => {
+          console.log("reCAPTCHA ready");
+          setRecaptchaLoaded(true);
+        });
+      } else {
+        console.warn("reCAPTCHA script loaded but grecaptcha not available");
+        setRecaptchaLoaded(true);
+      }
+    };
+    script.onerror = () => {
+      console.error("Failed to load reCAPTCHA script");
+      setRecaptchaLoaded(true); // Continue without reCAPTCHA
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup: remove script if component unmounts
+      const existingScript = document.querySelector(
+        `script[src*="recaptcha/api.js"]`
+      );
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, [recaptchaSiteKey]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -60,6 +114,17 @@ function RSVPForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isSubmitting) return;
+
+    // Wait for reCAPTCHA to load if it's required
+    if (recaptchaSiteKey && !recaptchaLoaded) {
+      setStatus({
+        type: "error",
+        message: "Please wait for security verification to load...",
+      });
+      return;
+    }
 
     if (!form.firstName.trim()) {
       setStatus({ type: "error", message: "Please enter your first name." });
@@ -103,10 +168,106 @@ function RSVPForm() {
       return;
     }
 
-    // Submit to Supabase
+    // Verify reCAPTCHA v3 (only if site key is configured)
+    let recaptchaToken = null;
+    if (recaptchaSiteKey) {
+      if (!window.grecaptcha) {
+        console.error("reCAPTCHA not loaded. Check your site key and network connection.");
+        setStatus({
+          type: "error",
+          message: "Security verification not loaded. Please refresh the page and try again.",
+        });
+        return;
+      }
+      
+      try {
+        console.log("Executing reCAPTCHA...");
+        recaptchaToken = await window.grecaptcha.execute(recaptchaSiteKey, {
+          action: "submit_rsvp",
+        });
+        console.log("reCAPTCHA token generated:", recaptchaToken ? "Success" : "Failed");
+        
+        if (!recaptchaToken) {
+          setStatus({
+            type: "error",
+            message: "reCAPTCHA verification failed. Please try again.",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("reCAPTCHA error:", error);
+        setStatus({
+          type: "error",
+          message: "reCAPTCHA verification failed. Please refresh and try again.",
+        });
+        return;
+      }
+    } else {
+      console.warn("reCAPTCHA site key not configured - skipping verification");
+    }
+
+    // Submit to Supabase with server-side reCAPTCHA verification
     setStatus({ type: "", message: "" });
+    setIsSubmitting(true);
     
     try {
+      // If we have a reCAPTCHA token, verify it server-side via Edge Function
+      if (recaptchaToken) {
+        // Call Supabase Edge Function to verify reCAPTCHA and save RSVP
+        const { data: functionData, error: functionError } = await supabase.functions.invoke(
+          'verify-recaptcha',
+          {
+            body: {
+              token: recaptchaToken,
+              rsvpData: {
+                first_name: form.firstName.trim(),
+                last_name: form.lastName.trim(),
+                attending: form.attending === "yes",
+                guests: form.attending === "yes" ? parseInt(form.guests, 10) : 0,
+                message: form.message.trim() || null,
+              }
+            }
+          }
+        );
+
+        if (functionError) {
+          console.error('Edge Function error:', functionError);
+          // Fallback to direct insert if Edge Function fails
+          console.warn('Falling back to direct insert');
+        } else if (functionData?.error) {
+          console.error('reCAPTCHA verification failed:', functionData);
+          setStatus({
+            type: "error",
+            message: functionData.error === 'reCAPTCHA score too low' 
+              ? "Security verification failed. Please try again."
+              : "Sorry, there was an error submitting your RSVP. Please try again later.",
+          });
+          setIsSubmitting(false);
+          return;
+        } else if (functionData?.success) {
+          // Success via Edge Function
+          console.log("RSVP submitted successfully with score:", functionData.score);
+          setStatus({
+            type: "success",
+            message:
+              "Thank you for your response! We have received your RSVP and will be in touch with more details soon.",
+          });
+
+          setForm((prev) => ({
+            ...prev,
+            firstName: "",
+            lastName: "",
+            attending: "yes",
+            guests: "1",
+            message: "",
+          }));
+          
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Fallback: Direct insert (for development or if Edge Function not set up)
       const { data, error } = await supabase
         .from('rsvps')
         .insert({
@@ -114,16 +275,18 @@ function RSVPForm() {
           last_name: form.lastName.trim(),
           attending: form.attending === "yes",
           guests: form.attending === "yes" ? parseInt(form.guests, 10) : 0,
-          message: form.message.trim() || null
+          message: form.message.trim() || null,
+          recaptcha_token: recaptchaToken || null
         });
 
       if (error) {
         console.error('Error submitting RSVP:', error);
-        setStatus({
-          type: "error",
-          message: "Sorry, there was an error submitting your RSVP. Please try again later.",
-        });
-        return;
+      setStatus({
+        type: "error",
+        message: "Sorry, there was an error submitting your RSVP. Please try again later.",
+      });
+      setIsSubmitting(false);
+      return;
       }
 
       console.log("RSVP submitted successfully:", data);
@@ -142,12 +305,15 @@ function RSVPForm() {
         guests: "1",
         message: "",
       }));
+      
+      setIsSubmitting(false);
     } catch (err) {
       console.error('Unexpected error:', err);
       setStatus({
         type: "error",
         message: "Sorry, there was an error submitting your RSVP. Please try again later.",
       });
+      setIsSubmitting(false);
     }
   };
 
@@ -416,17 +582,23 @@ function RSVPForm() {
       )}
 
       <div className="form-submit-wrapper">
-        <button className="btn primary rsvp-submit-btn" type="submit">
-          <span>Confirm</span>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <line x1="22" y1="2" x2="11" y2="13"></line>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
+        <button 
+          className="btn primary rsvp-submit-btn" 
+          type="submit"
+          disabled={isSubmitting}
+        >
+          <span>{isSubmitting ? "Submitting..." : "Confirm"}</span>
+          {!isSubmitting && (
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          )}
         </button>
       </div>
     </form>

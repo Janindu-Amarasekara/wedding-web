@@ -821,6 +821,16 @@ main {
   text-align: center;
 }
 
+.recaptcha-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
+.recaptcha-wrapper > div {
+  margin: 0 auto;
+}
+
 .honeypot-field {
   position: absolute;
   left: -9999px;
