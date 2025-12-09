@@ -188,7 +188,7 @@ function generateCalendarEvent() {
   URL.revokeObjectURL(link.href);
 }
 
-function formatTitleAndName(rawTitle, rawName) {
+function formatTitleAndName(rawTitle, rawName, withFamily = false) {
   const title = (rawTitle || "").trim();
   const name = (rawName || "").trim();
 
@@ -206,11 +206,16 @@ function formatTitleAndName(rawTitle, rawName) {
 
   if (!name) return displayTitle;
 
-  if (displayTitle === "Family of") {
-    return `Family of ${name}`;
+  let formattedName = name;
+  if (withFamily) {
+    formattedName = `${name} & Family`;
   }
 
-  return `${displayTitle} ${name}`.trim();
+  if (displayTitle === "Family of") {
+    return `Family of ${formattedName}`;
+  }
+
+  return `${displayTitle} ${formattedName}`.trim();
 }
 
 function HomePage() {
@@ -219,11 +224,12 @@ function HomePage() {
   const title = searchParams.get("title") || "";
   const firstname = searchParams.get("firstname") || "";
   const lastname = searchParams.get("lastname") || "";
+  const withFamily = searchParams.get("family") === "true" || searchParams.get("family") === "1";
 
   // Combine firstname and lastname into full name
   const fullName = [firstname, lastname].filter(Boolean).join(" ");
 
-  const guestLabel = formatTitleAndName(title, fullName);
+  const guestLabel = formatTitleAndName(title, fullName, withFamily);
 
   return (
     <>
