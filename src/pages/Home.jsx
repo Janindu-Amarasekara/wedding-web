@@ -188,11 +188,12 @@ function generateCalendarEvent() {
   URL.revokeObjectURL(link.href);
 }
 
-function formatTitleAndName(rawTitle, rawName, withFamily = false) {
+function formatTitleAndName(rawTitle, rawName, withFamily = false, custom = "") {
   const title = (rawTitle || "").trim();
   const name = (rawName || "").trim();
+  const customPart = (custom || "").trim();
 
-  if (!title && !name) return "";
+  if (!title && !name && !customPart) return "";
 
   const t = title.toLowerCase();
 
@@ -204,11 +205,21 @@ function formatTitleAndName(rawTitle, rawName, withFamily = false) {
   else if (t === "mr & mrs" || t === "mr and mrs") displayTitle = "Mr & Mrs";
   else if (t === "family of" || t === "family") displayTitle = "Family of";
 
+  // If custom part is provided and no name, return just the custom part
+  if (!name && customPart) {
+    return customPart;
+  }
+
   if (!name) return displayTitle;
 
   let formattedName = name;
   if (withFamily) {
     formattedName = `${name} & Family`;
+  }
+
+  // Append custom part if provided
+  if (customPart) {
+    formattedName = `${formattedName} ${customPart}`;
   }
 
   if (displayTitle === "Family of") {
@@ -225,11 +236,12 @@ function HomePage() {
   const firstname = searchParams.get("firstname") || "";
   const lastname = searchParams.get("lastname") || "";
   const withFamily = searchParams.get("family") === "true" || searchParams.get("family") === "1";
+  const custom = searchParams.get("custom") || "";
 
   // Combine firstname and lastname into full name
   const fullName = [firstname, lastname].filter(Boolean).join(" ");
 
-  const guestLabel = formatTitleAndName(title, fullName, withFamily);
+  const guestLabel = formatTitleAndName(title, fullName, withFamily, custom);
 
   return (
     <>
